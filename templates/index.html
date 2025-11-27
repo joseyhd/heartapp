@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Predicción de Riesgo Cardiaco</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --brand:#22c55e;
+      --brand-2:#06b6d4;
+      --danger:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;padding:0;
+      background:linear-gradient(135deg,var(--bg),#020617);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      min-height:100vh;
+    }
+    .container{max-width:960px;margin:40px auto;padding:0 16px;}
+    .card{
+      background:radial-gradient(1200px 600px at 10% -10%,rgba(34,197,94,.06),transparent),
+                 radial-gradient(1000px 500px at 110% 10%,rgba(6,182,212,.06),transparent),
+                 var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px;
+    }
+    h1{margin:0 0 6px;font-size:clamp(24px,3.4vw,34px);}
+    .sub{margin:0 0 24px;font-size:14px;color:var(--muted);}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12,1fr);
+      gap:12px;
+    }
+    .field{
+      grid-column:span 12;
+      background:rgba(255,255,255,.02);
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.06);
+      padding:10px 12px 8px;
+      display:flex;
+      flex-direction:column;
+    }
+    .field:focus-within{
+      border-color:rgba(34,197,94,.6);
+      background:rgba(34,197,94,.04);
+    }
+    .label{font-size:12px;color:var(--muted);margin-bottom:4px;}
+    input,select{
+      background:transparent;
+      border:none;
+      outline:none;
+      color:var(--text);
+      font-size:14px;
+      padding:4px 2px 6px;
+    }
+    option{color:#020617;}
+    .radios{display:flex;gap:14px;font-size:13px;margin-top:4px;}
+    .radios label{display:flex;align-items:center;gap:6px;}
+    input[type="number"]{width:100%;}
+    @media (min-width:640px){
+      .field--half{grid-column:span 6;}
+      .field--third{grid-column:span 4;}
+    }
+    .actions{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;}
+    .btn{
+      border:none;
+      border-radius:1000px;
+      padding:11px 18px;
+      font-weight:600;
+      cursor:pointer;
+      background:linear-gradient(135deg,var(--brand),var(--brand-2));
+      color:#020617;
+      box-shadow:0 8px 18px rgba(34,197,94,.25),0 3px 10px rgba(6,182,212,.25);
+    }
+    .btn:active{transform:translateY(1px) scale(.99);}
+    .result,.error{
+      margin-top:18px;
+      border-radius:14px;
+      padding:14px 16px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(34,197,94,.08);
+      font-size:14px;
+    }
+    .error{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);}
+    .helper{margin-top:6px;font-size:12px;color:var(--muted);}
+    .footer{margin-top:14px;font-size:12px;color:var(--muted);text-align:center;opacity:.75;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Predicción de riesgo cardiaco</h1>
+      <p class="sub">
+        Llena los datos básicos del paciente y presiona <b>Calcular</b>.  
+        Los campos están en español y aceptan punto o coma como separador decimal.
+      </p>
+
+      <form action="/predict" method="post" novalidate>
+        <div class="grid">
+          <!-- Datos numéricos -->
+          <div class="field field--third">
+            <span class="label">Edad (años)</span>
+            <input type="text" name="edad" placeholder="Ej. 54"
+                   value="{{ (last_values or {}).get('edad','') }}" required>
+          </div>
+
+          <div class="field field--third">
+            <span class="label">Presión arterial en reposo (mmHg)</span>
+            <input type="text" name="trestbps" placeholder="Ej. 130"
+                   value="{{ (last_values or {}).get('trestbps','') }}" required>
+          </div>
+
+          <div class="field field--third">
+            <span class="label">Colesterol sérico (mg/dl)</span>
+            <input type="text" name="chol" placeholder="Ej. 240"
+                   value="{{ (last_values or {}).get('chol','') }}" required>
+          </div>
+
+          <div class="field field--third">
+            <span class="label">Glucosa en ayunas &gt; 120 mg/dl</span>
+            <select name="fbs" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="1" {% if (last_values or {}).get('fbs') == '1' %}selected{% endif %}>Sí</option>
+              <option value="0" {% if (last_values or {}).get('fbs') == '0' %}selected{% endif %}>No</option>
+            </select>
+          </div>
+
+          <div class="field field--third">
+            <span class="label">Frecuencia cardiaca máxima</span>
+            <input type="text" name="thalach" placeholder="Ej. 150"
+                   value="{{ (last_values or {}).get('thalach','') }}" required>
+          </div>
+
+          <div class="field field--third">
+            <span class="label">Depresión ST (oldpeak)</span>
+            <input type="text" name="oldpeak" placeholder="Ej. 1.4"
+                   value="{{ (last_values or {}).get('oldpeak','') }}" required>
+          </div>
+
+          <!-- Sexo -->
+          <div class="field field--half">
+            <span class="label">Sexo</span>
+            <div class="radios">
+              <label>
+                <input type="radio" name="sexo" value="male"
+                       {% if (last_values or {}).get('sexo') == 'male' %}checked{% endif %}> Hombre
+              </label>
+              <label>
+                <input type="radio" name="sexo" value="female"
+                       {% if (last_values or {}).get('sexo') == 'female' %}checked{% endif %}> Mujer
+              </label>
+            </div>
+          </div>
+
+          <!-- Tipo de dolor en el pecho -->
+          <div class="field field--half">
+            <span class="label">Tipo de dolor en el pecho</span>
+            <select name="cp" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="typical angina"
+                {% if (last_values or {}).get('cp') == 'typical angina' %}selected{% endif %}>
+                Angina típica
+              </option>
+              <option value="atypical angina"
+                {% if (last_values or {}).get('cp') == 'atypical angina' %}selected{% endif %}>
+                Angina atípica
+              </option>
+              <option value="non-anginal pain"
+                {% if (last_values or {}).get('cp') == 'non-anginal pain' %}selected{% endif %}>
+                Dolor no anginoso
+              </option>
+              <option value="asymptomatic"
+                {% if (last_values or {}).get('cp') == 'asymptomatic' %}selected{% endif %}>
+                Asintomático
+              </option>
+            </select>
+          </div>
+
+          <!-- ECG en reposo -->
+          <div class="field field--half">
+            <span class="label">ECG en reposo</span>
+            <select name="restecg" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="0" {% if (last_values or {}).get('restecg') == '0' %}selected{% endif %}>
+                Normal
+              </option>
+              <option value="1" {% if (last_values or {}).get('restecg') == '1' %}selected{% endif %}>
+                Anormalidad de ST-T
+              </option>
+              <option value="2" {% if (last_values or {}).get('restecg') == '2' %}selected{% endif %}>
+                Hipertrofia ventricular
+              </option>
+            </select>
+          </div>
+
+          <!-- Angina inducida por ejercicio -->
+          <div class="field field--half">
+            <span class="label">Angina inducida por ejercicio</span>
+            <select name="exang" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="1" {% if (last_values or {}).get('exang') == '1' %}selected{% endif %}>Sí</option>
+              <option value="0" {% if (last_values or {}).get('exang') == '0' %}selected{% endif %}>No</option>
+            </select>
+          </div>
+
+          <!-- Pendiente ST -->
+          <div class="field field--half">
+            <span class="label">Pendiente del segmento ST</span>
+            <select name="slope" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="1" {% if (last_values or {}).get('slope') == '1' %}selected{% endif %}>Ascendente</option>
+              <option value="2" {% if (last_values or {}).get('slope') == '2' %}selected{% endif %}>Plana</option>
+              <option value="3" {% if (last_values or {}).get('slope') == '3' %}selected{% endif %}>Descendente</option>
+            </select>
+          </div>
+
+          <!-- Vasos coloreados -->
+          <div class="field field--half">
+            <span class="label">N.º de vasos coloreados por fluoroscopia</span>
+            <select name="ca" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              {% for v in ['0.0','1.0','2.0','3.0'] %}
+                <option value="{{ v }}"
+                  {% if (last_values or {}).get('ca') == v %}selected{% endif %}>{{ v[0] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Thal -->
+          <div class="field field--half">
+            <span class="label">Thal</span>
+            <select name="thal" required>
+              <option value="" disabled selected hidden>Selecciona una opción</option>
+              <option value="3.0" {% if (last_values or {}).get('thal') == '3.0' %}selected{% endif %}>
+                Normal
+              </option>
+              <option value="6.0" {% if (last_values or {}).get('thal') == '6.0' %}selected{% endif %}>
+                Defecto fijo
+              </option>
+              <option value="7.0" {% if (last_values or {}).get('thal') == '7.0' %}selected{% endif %}>
+                Defecto reversible
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="submit">Calcular</button>
+        </div>
+
+        {% if prediction_text %}
+        <div class="result">
+          <strong>Resultado:</strong> {{ prediction_text }}
+          <div class="helper">
+            Este resultado proviene de un modelo estadístico y <b>no sustituye</b> una valoración médica profesional.
+          </div>
+        </div>
+        {% endif %}
+
+        {% if error_text %}
+        <div class="error">
+          <strong>Error:</strong> {{ error_text }}
+        </div>
+        {% endif %}
+      </form>
+
+      <div class="footer">
+        Interfaz diseñada por Pablo Butista
+      </div>
+    </div>
+  </div>
+</body>
+</html>
