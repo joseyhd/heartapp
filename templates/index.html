@@ -83,6 +83,16 @@
       margin-top:20px;border-radius:14px;padding:14px 16px;font-size:14px;
       border:1px solid rgba(0,0,0,0.05);
     }
+    .btn-volver {
+      background: linear-gradient(135deg, #161414, #3b2426);
+      box-shadow: 0 6px 14px rgba(255, 107, 107, 0.3);
+    }
+    .btn-volver:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+    .btn-volver:active {
+      transform: scale(.98);
+    }
     .result{background:#e0f7fa;color:#006064;}
     .error{background:#ffebee;color:#c62828;}
     .helper{margin-top:6px;font-size:12px;color:var(--muted);}
@@ -95,8 +105,8 @@
     <div class="card">
       <h1>Predicción de riesgo cardiaco</h1>
       <p class="sub">
-        Llena los datos básicos del paciente y presiona <b>Calcular</b>.  
-        Los campos permiten punto o coma como separador decimal.
+        Llena los datos del paciente y presiona <b>Calcular</b>.  
+        Se permite punto o coma como separador decimal.
       </p>
 
       <form action="/predict" method="post" novalidate>
@@ -104,44 +114,44 @@
           <!-- Campos numéricos -->
           <div class="field field--third">
             <span class="label">Edad (años)</span>
-            <input type="text" name="edad" placeholder="Ej. 52"
+            <input type="text" name="edad" placeholder="Rango: 0 a 100"
               value="{{ (last_values or {}).get('edad','') }}" required>
           </div>
 
           <div class="field field--third">
             <span class="label">Presión arterial reposo (mmHg)</span>
-            <input type="text" name="trestbps" placeholder="Ej. 130"
+            <input type="text" name="trestbps" placeholder="Rango: 80 a 200"
               value="{{ (last_values or {}).get('trestbps','') }}" required>
           </div>
 
           <div class="field field--third">
             <span class="label">Colesterol sérico (mg/dl)</span>
-            <input type="text" name="chol" placeholder="Ej. 240"
+            <input type="text" name="chol" placeholder="Rango: 100 a 600"
               value="{{ (last_values or {}).get('chol','') }}" required>
           </div>
 
           <div class="field field--third">
-            <span class="label">Glucosa en ayunas &gt; 120 mg/dl</span>
-            <select name="fbs" required>
-              <option value="" disabled selected hidden>Selecciona</option>
-              <option value="1" {% if (last_values or {}).get('fbs') == '1' %}selected{% endif %}>Sí</option>
-              <option value="0" {% if (last_values or {}).get('fbs') == '0' %}selected{% endif %}>No</option>
-            </select>
-          </div>
-
-          <div class="field field--third">
             <span class="label">Frecuencia cardiaca máx.</span>
-            <input type="text" name="thalach" placeholder="Ej. 150"
+            <input type="text" name="thalach" placeholder="Rango: 60 a 220"
               value="{{ (last_values or {}).get('thalach','') }}" required>
           </div>
 
           <div class="field field--third">
             <span class="label">Depresión ST (oldpeak)</span>
-            <input type="text" name="oldpeak" placeholder="Ej. 1.4"
+            <input type="text" name="oldpeak" placeholder="Rango: 0.0 a 6.0"
               value="{{ (last_values or {}).get('oldpeak','') }}" required>
           </div>
 
-          <!-- Campo sexo -->
+          <div class="field field--third">
+            <span class="label">Glucosa en ayunas (>120 mg/dl)</span>
+            <select name="fbs" required>
+              <option value="" disabled selected hidden>0 = No · 1 = Sí</option>
+              <option value="1" {% if (last_values or {}).get('fbs') == '1' %}selected{% endif %}>Sí</option>
+              <option value="0" {% if (last_values or {}).get('fbs') == '0' %}selected{% endif %}>No</option>
+            </select>
+          </div>
+
+          <!-- Campos categóricos -->
           <div class="field field--half">
             <span class="label">Sexo</span>
             <div class="radios">
@@ -152,26 +162,24 @@
             </div>
           </div>
 
-          <!-- Campo tipo de dolor -->
           <div class="field field--half">
             <span class="label">Tipo de dolor en el pecho</span>
             <select name="cp" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              <option value="typical angina" {% if (last_values or {}).get('cp') == 'typical angina' %}selected{% endif %}>Angina típica</option>
-              <option value="atypical angina" {% if (last_values or {}).get('cp') == 'atypical angina' %}selected{% endif %}>Angina atípica</option>
-              <option value="non-anginal pain" {% if (last_values or {}).get('cp') == 'non-anginal pain' %}selected{% endif %}>Dolor no anginoso</option>
-              <option value="asymptomatic" {% if (last_values or {}).get('cp') == 'asymptomatic' %}selected{% endif %}>Asintomático</option>
+              <option value="typical angina">Angina típica</option>
+              <option value="atypical angina">Angina atípica</option>
+              <option value="non-anginal pain">Dolor no anginoso</option>
+              <option value="asymptomatic">Asintomático</option>
             </select>
           </div>
 
-          <!-- Resto de selects -->
           <div class="field field--half">
             <span class="label">ECG en reposo</span>
             <select name="restecg" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              <option value="0" {% if (last_values or {}).get('restecg') == '0' %}selected{% endif %}>Normal</option>
-              <option value="1" {% if (last_values or {}).get('restecg') == '1' %}selected{% endif %}>ST-T alterado</option>
-              <option value="2" {% if (last_values or {}).get('restecg') == '2' %}selected{% endif %}>Hipertrofia</option>
+              <option value="0">Normal</option>
+              <option value="1">ST-T alterado</option>
+              <option value="2">Hipertrofia</option>
             </select>
           </div>
 
@@ -179,8 +187,8 @@
             <span class="label">Angina por ejercicio</span>
             <select name="exang" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              <option value="1" {% if (last_values or {}).get('exang') == '1' %}selected{% endif %}>Sí</option>
-              <option value="0" {% if (last_values or {}).get('exang') == '0' %}selected{% endif %}>No</option>
+              <option value="1">Sí</option>
+              <option value="0">No</option>
             </select>
           </div>
 
@@ -188,9 +196,9 @@
             <span class="label">Pendiente ST</span>
             <select name="slope" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              <option value="1" {% if (last_values or {}).get('slope') == '1' %}selected{% endif %}>Ascendente</option>
-              <option value="2" {% if (last_values or {}).get('slope') == '2' %}selected{% endif %}>Plana</option>
-              <option value="3" {% if (last_values or {}).get('slope') == '3' %}selected{% endif %}>Descendente</option>
+              <option value="1">Ascendente</option>
+              <option value="2">Plana</option>
+              <option value="3">Descendente</option>
             </select>
           </div>
 
@@ -198,9 +206,10 @@
             <span class="label">N.º de vasos coloreados</span>
             <select name="ca" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              {% for v in ['0.0','1.0','2.0','3.0'] %}
-                <option value="{{ v }}" {% if (last_values or {}).get('ca') == v %}selected{% endif %}>{{ v[0] }}</option>
-              {% endfor %}
+              <option value="0.0">0</option>
+              <option value="1.0">1</option>
+              <option value="2.0">2</option>
+              <option value="3.0">3</option>
             </select>
           </div>
 
@@ -208,9 +217,9 @@
             <span class="label">Thal</span>
             <select name="thal" required>
               <option value="" disabled selected hidden>Selecciona</option>
-              <option value="3.0" {% if (last_values or {}).get('thal') == '3.0' %}selected{% endif %}>Normal</option>
-              <option value="6.0" {% if (last_values or {}).get('thal') == '6.0' %}selected{% endif %}>Defecto fijo</option>
-              <option value="7.0" {% if (last_values or {}).get('thal') == '7.0' %}selected{% endif %}>Defecto reversible</option>
+              <option value="3.0">Normal</option>
+              <option value="6.0">Defecto fijo</option>
+              <option value="7.0">Defecto reversible</option>
             </select>
           </div>
         </div>
@@ -224,7 +233,23 @@
           <strong>Resultado:</strong> {{ prediction_text }}
           <div class="helper">Este resultado no sustituye evaluación médica profesional.</div>
         </div>
+        {% if resumen %}
+          <div class="result" style="margin-top:15px;">
+            <strong>📋 Datos ingresados:</strong>
+            <ul>
+              {% for key, value in resumen.items() %}
+                <li><b>{{ key }}:</b> {{ value }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        
         {% endif %}
+        <div class="actions" style="margin-top:15px;">
+          <a href="/" class="btn btn-secondary btn-volver">Volver</a>
+        </div>
+
+        {% endif %}
+
 
         {% if error_text %}
         <div class="error">
@@ -233,8 +258,10 @@
         {% endif %}
       </form>
 
+  
+
       <div class="footer">
-        Aplicación con fines educativos · Flask + Modelo ML
+        Aplicación con fines educativos | Flask + Modelo ML
       </div>
     </div>
   </div>
